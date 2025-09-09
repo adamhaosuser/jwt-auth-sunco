@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<!-- Adam Meehan 2024 -->
+<html>
+  <head>
+    <title>Web Widget</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="style.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/enc-base64url.min.js"></script>
+  </head>
+  <body>
+    <div></div>
+    <div></div>
+
+    <div class="container">
+      <div id="contact-form-center">
+        <div id="linkblockhead">
+          <p>
+          This tool is designed to help you arbitrarily load a <a href="https://docs.smooch.io/guide/web-messenger/" target="_blank"><b>SunCo Web Messenger</b></a> 
+          on the page and log users in for test purposes.<br/><br/>
+          You can enter your Integration ID and select <b>Load Messenger</b> to install and initialise the Messenger on this page.<br/><br/>
+            Once initialised you can then collect your <a href="https://support.zendesk.com/hc/en-us/articles/4576088682266-Using-the-Conversations-API-keys" target="_blank">Conversations API Key</a> details, craft a <a href="https://developer.zendesk.com/documentation/zendesk-web-widget-sdks/sdks/web/enabling_auth_visitors/" target="_blank">JWT payload body</a> 
+          and select <b>Login</b><br/><br/>
+          This page will then constuct a JWT token that is used to verify this user's identity. A JWT token is comprised of three main parts:</p>
+          <ul>
+            <li><b>Header</b> - Describes the token type and signing algorithm used.</li>
+            <li><b>Body</b> - Contains claims, or information to be shared. In our case this is user information like name and ID.</li>
+            <li><b>Signature</b> - The <b>Header</b> and <b>Body</b>, signed using the algorithm in the Header with our <b>Secret</b>. This used to validate the token and ensure it's authenticity when logging a user in.</li>
+          </ul>
+          <p>
+          In a real life scenario this token is constructed server-side and returned to the browser to log a user in, this is primarily so that the secret is not exposed to the user and 
+          we can guarantee the user is who they say they are and that the data has not been tampered with.<br/><br/>
+          For our test tool here we construct this token in the browser. This is bad practice but allows you to see how the token is constructed, I've commented the token construction 
+          method, genToken(), in the page source if you'd like to take a look under the hood.<br/><br/>
+          </p>
+          <p>
+          If you're looking to test authentication with the <a href="https://jwt-auth-messaging.glitch.me/" target="_blank">Zendesk Web Widget</a> you can click here.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div id="contact-form">
+        <form>
+          <div>
+            <label for="name">
+              <span class="required">Integration ID:</span>
+              <input
+                type="text"
+                id="keyval"
+                name="keyval"
+                value=""
+                placeholder="Your Integration ID"
+                tabindex="1"
+                autofocus="autofocus"
+              />
+            </label>
+          </div>
+          <div>
+            <button
+              name="Load Widget"
+              type="button"
+              id="submit_key"
+              onclick="loadWidget()"
+            >
+              Load Messenger
+            </button>
+          </div>
+        </form>
+        </br></br></br>
+        <form>
+          <div>
+            <label for="kid">
+              <span class="required">Kid:</span>
+              <input
+                type="text"
+                id="kid"
+                name="kid"
+                value=""
+                placeholder="Your Kid"
+                tabindex="2"
+              />
+            </label>
+          </div>
+          <div>
+            <label for="secret">
+              <span class="required">Secret:</span>
+              <input
+                type="text"
+                id="secret"
+                name="secret"
+                value=""
+                placeholder="Your Secret"
+                tabindex="3"
+              />
+            </label>
+          </div>
+          <div>
+            <label for="payload">
+              <span class="required">Payload:</span>
+              <textarea
+                id="payload"
+                name="payload"
+                placeholder="Your user payload"
+                tabindex="4"
+              ></textarea>
+            </label>
+          </div>
+          <div>
+            <button
+              name="Login"
+              type="button"
+              id="login_submit"
+              onclick="beginAuth()"
+            >
+              Login
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="container">
+      <form>
+        <div id="contact-form-right">
+          <div>
+            <label for="name">
+              <span class="required">Output:</span>
+              <textarea id="output" name="output" placeholder=""></textarea>
+            </label>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div></div>
+
+    <script>
+      function loadWidget() {
+        const keyVal = document.getElementById("keyval").value;
+        const script = document.createElement("script");
+        script.text = `!function(o,d,s,e,f){var i,a,p,c=[],h=[];function t(){var t="You must provide a supported major version.";try{if(!f)throw new Error(t);var e,n="https://cdn.smooch.io/",r="smooch";e="string"==typeof this.response?JSON.parse(this.response):this.response;var o=f.match(/([0-9]+)\.?([0-9]+)?\.?([0-9]+)?/),s=o&&o[1],i=o&&o[2],a=o&&o[3],p=e["v"+s],c=e["v"+s+"."+i+".patch"];if(e.url||p||c){var h=d.getElementsByTagName("script")[0],u=d.createElement("script");if(u.async=!0,a)u.src=c||n+r+"."+f+".min.js";else{if(!(5<=s&&p))throw new Error(t);u.src=p}h.parentNode.insertBefore(u,h)}}catch(e){e.message===t&&console.error(e)}}o[s]={init:function(){i=arguments;var t={then:function(e){return h.push({type:"t",next:e}),t},catch:function(e){return h.push({type:"c",next:e}),t}};return t},on:function(){c.push(arguments)},render:function(){a=arguments},destroy:function(){p=arguments}},o.__onWebMessengerHostReady__=function(e){if(delete o.__onWebMessengerHostReady__,o[s]=e,i)for(var t=e.init.apply(e,i),n=0;n<h.length;n++){var r=h[n];t="t"===r.type?t.then(r.next):t.catch(r.next)}a&&e.render.apply(e,a),p&&e.destroy.apply(e,p);for(n=0;n<c.length;n++)e.on.apply(e,c[n])};var n=new XMLHttpRequest;n.addEventListener("load",t),n.open("GET","https://"+e+".webloader.smooch.io/",!0),n.responseType="json",n.send()}(window,document,"Smooch","${keyVal}","5.6.2");`;
+        document.head.appendChild(script);
+        setTimeout(initWidget(keyVal),2000);
+        logOutput("Snippet loaded. Now Initialising.");
+      }
+      
+      function initWidget(keyVal) {
+        const script2 = document.createElement("script");
+        script2.text = `Smooch.init({ integrationId: '${keyVal}' }).then(function () { });`;
+        document.head.appendChild(script2);
+      }
+
+      function beginAuth() {
+        var kid = document.getElementById("kid").value;
+        var secret = document.getElementById("secret").value;
+        var payload = document.getElementById("payload").value;
+        logOutput("Generating JWT.");
+        token = genToken(kid, secret, payload);
+        logOutput("JWT generated, logging in.");
+        logOutput(`JWT is: ${token}`);
+        var extId = extractExt(payload);
+        Smooch.login(extId, token);
+      }
+      
+      function extractExt(claimPayload){
+        
+        // This additional step is required to extract the external_id from the payload you've supplied. The call to login() requires the external_id value to be passed in so
+        // we extract and return it here.
+        
+        var claims = JSON.parse(claimPayload);
+        extId = claims.external_id;
+        return extId;
+      }
+
+      function logOutput(text) {
+        console.log(text);
+        var textarea = document.getElementById("output");
+        textarea.value += text;
+        textarea.value += "\n";
+        textarea.value += "\n";
+      }
+
+      function genToken(keyId, appSecret, claimPayload) {
+        
+        // This is where we generate the token to use with our loginUser call. We are passing in our key ID, Secret and JWT payload body (claim)
+        
+        // Here we specify the type of token, the algorithm used for signing (SHA 256) and our key ID
+        const header = {
+          alg: "HS256",
+          typ: "JWT",
+          kid: keyId,
+        };
+
+        var claims = JSON.parse(claimPayload);
+
+        function base64url(source) {
+          // Encode in classical base64
+          encodedSource = CryptoJS.enc.Base64.stringify(source);
+
+          // Remove padding equal characters
+          encodedSource = encodedSource.replace(/=+$/, "");
+
+          // Replace characters according to base64url specifications
+          encodedSource = encodedSource.replace(/\+/g, "-");
+          encodedSource = encodedSource.replace(/\//g, "_");
+
+          return encodedSource;
+        }
+
+        // Here we base64 encode our Header - the Header, Claim and Signature are all base64 encoded
+        var stringifiedHeader = CryptoJS.enc.Utf8.parse(JSON.stringify(header));
+        var encodedHeader = base64url(stringifiedHeader);
+
+        // Here we base64 encode our Claim
+        var stringifiedData = CryptoJS.enc.Utf8.parse(JSON.stringify(claims));
+        var encodedData = base64url(stringifiedData);
+
+        // Here we construct our signature by combining the Header and Claim, encrypting it using SHA 256 using our Secret and then base64 encoding the result.
+        var signature = encodedHeader + "." + encodedData;
+        signature = CryptoJS.HmacSHA256(signature, appSecret);
+        signature = base64url(signature);
+
+        // Finally we take our Header, Claim and Signature and combine them into our complete JWT token.
+        var jwt = `${encodedHeader}.${encodedData}.${signature}`;
+
+        // And return it for use with our login call. If we were performing this server-side this is where we might send it back to the browser so the user can log in.
+        return jwt;
+      }
+    </script>
+  </body>
+</html>
